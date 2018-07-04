@@ -8,7 +8,9 @@ Documents can be grouped by a subject, so it is possible to detect "localised" t
 
 Keywords: trending, trends, news, natural language processing, NLP, machine learning, artificial intelligence, data science, hierarchical clustering.
 
-## Document format:
+# Quick Start
+
+## Document format
 
 Documents need to be ingested into a ramekin using the following format:
 ```
@@ -30,7 +32,7 @@ First, install the NPM package for ramekin:
    npm i ramekinjs
 ```
 
-Create a simple script:
+Create a simple script that ingests the data from this file, and detects the trends:
 
 ```
    const Ramekin = require('ramekinjs');
@@ -42,12 +44,14 @@ Create a simple script:
    ramekin.ingestAll({..});
 
    // process the trends
-   ramekin.trending q(...); 
+   ramekin.trending(...); 
 ```
 
-## Quick Start
+In a practical example, you will want to look at the last few days. The following code snippet lets you do this:
 
-There is a (currently insecure) API available for creating ramekins, adding news stories and getting the current trends from them.
+```
+  get the last 2 days and pass as options...
+```  
 
 ## Configurable:
 
@@ -55,7 +59,7 @@ History Window - how far back you want to look for your history to determine typ
 
 Balance - ability to configure what consitutes a spike for a trend. It's important that this is kept relative to the particular term used. For example, if the word "cycle" typically occurs in 100 posts per day in the cycling category, if it then occurs an extra 10 times that's not massively significant. However if the phrase "Santa Cruz Hightower" typically occurs once or twice per month (which seems reasonable, given that it's an established product), if Santa Cruz release a new iteration of the bike, and 10 articles appear about the bike within a small time period, then that would be more statistically significant.
 
-## Roadmap
+# Roadmap
 
 * Blog article talking about how it works.
 * Improve error handling (i.e. simple stuff, like error if ID already exists!!!)
@@ -66,13 +70,15 @@ Balance - ability to configure what consitutes a spike for a trend. It's importa
 * Persistence.
 * Run at scale.
 
-## Automated tests:
+# Automated tests:
 
 Unit tests:
 
 - ensure similar phrases are modelled as one. i.e. "cycle", "cycling", "cyclist".
 
-## Microservice
+# Microservice
+
+IGNORE There is a (currently insecure) API available for creating ramekins, adding news stories and getting the current trends from them.
 
 * Able to take a load of docs and give trends (by category).
  * Supply with example data across a range of subjects.
