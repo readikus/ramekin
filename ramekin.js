@@ -1,37 +1,6 @@
-/*
-Ramekin server
-
-api/ingest
-api/trends
-
-*/
-
-
-
-
 /**
- * 0.1 requirements:
+ * Features:
  *
- * Able to take a load of docs and give trends (by category).
- * Supply with example data across a range of subjects.
- * Mirror the data feeds that go into something like mashable.com
- *
- * Given some example feeds, with different subjects, find the trends 
- * on a given day for each subject. Able to present the subjects, and the
- * documents that are clustered into the trends.
- * Implement the @todos.
- * Make it work with bikefeast?
- * gc
- * DONE Rank documents for each cluster. The more phrases covered, the higher they rank, if these are equal, rank by the length of the sentence. 
- *
- * Blog article talking about how it works.
- * Road map in the readme
- * Readme
- * Road map - scaleable, presistence, increased configurability.
- *   API app. API security.
- *
- * * Medium blog
- * * 
  * Added stop word removal.
  */
 var cluster        = require('./cluster');
@@ -55,6 +24,7 @@ var Ramekin = function( options ) {
     // remove stop words - why wouldn't you?!
     keepStops: false,
 
+    // really not sure why I added this...assume it is to handle words that just didn't get mentioned in the history period.
     historyFrequencyTolerance: 1.6,
 
     similarityThreshold: 0.3,
@@ -99,44 +69,49 @@ var Ramekin = function( options ) {
  _id": (string) Unique identifier for a document.
  "subject": (optional) (string) Free-text representation of a specific subject.
 
-
-
-
-
  */
 Ramekin.prototype.ingestAll = function(docs) {
-  for( var i = 0; i < docs.length; i++ ){
+
+//  console.log("Ingesting",docs);
+  for( let i = 0; i < docs.length; i++ ){
     this.ingest(docs[i]);
   }
 };
-
 
 /**
  * Added option for remove stop words.
  */
 Ramekin.prototype.ingest = function( doc ) {
 
+  // preprocess the date to check it's in the right format.
+  if( !(doc.date instanceof Date) ){
+    doc.date = new Date(doc.date);
+  }
+
+  console.log( "Ingesting", doc );
+
   // we may need to revisit what doc data we store
   this.docs[ doc._id ] = doc;
+
   // generate all the [1...n]-grams for the document
-  for( var n = 1; n <= this.options.maxN; n++ ){
+  for( let n = 1; n <= this.options.maxN; n++ ){
+
     // create ngrams from the normalised text
-    var ngrams = NGrams.ngrams( this.normalise(doc.body), n );
+    let ngrams = NGrams.ngrams( this.normalise(doc.body), n );
+
     // ingest all the ngrams
-    for( var i = 0; i < ngrams.length; i++ ){
+    for( let i = 0; i < ngrams.length; i++ ){
       this.ingestNGram( ngrams[i], doc );
     }
+    
   }
 
 };
 
 
-
-
-
 Ramekin.prototype.ingestNGram = function( ngram, doc ) {
 
-  var ng = {
+  let ng = {
     date: doc.date,
     ngram: ngram,
     subject: doc.subject
@@ -184,10 +159,13 @@ Ramekin.prototype.trending = function(options) {
     options.historyStart = moment(options.historyEnd).subtract(this.options.historyDays, 'day').toDate();
   }
 
-  //console.log("trending.options:",options);
+  console.log("trending.options:",options);
 
   // find all the common phrases used in respective subject, over the past day
   var usedPhrases = this.usedPhrases( options );
+
+  console.log("There are ", usedPhrases.length, " used phrases");
+
   var trendPhrases = [];
   //var phraseDocs = {}; // duplicated data used later for sorting
   var docPhrases = {}; // duplicated data used later for sorting
@@ -344,7 +322,6 @@ Ramekin.prototype.removeSubPhrases = function(trendPhrases) {
 Ramekin.prototype.findDocs = function( ngram, options ){
 
   var history = this.ngramHistory[ ngram ];
-
   var that = this;
 
   // I'm sure this can be written in a single line, 
