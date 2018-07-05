@@ -3,6 +3,8 @@
  *
  * * Added stop word removal.
  * * Cluster related trends.
+ * * IFngest dates in string format.
+
  * * Normalise text, so similar words are clustered (i.e. "cycle", "Cycle", "CycLING" etc.)
  */
 var cluster        = require('./cluster');
@@ -52,27 +54,21 @@ var Ramekin = function( options ) {
 /**
  * ingestAll() ingests a set of documents into the current Ramekin.
  * @param {docs} a set of documents in the format expected format 
- *   (described above).
- {_id
- body
- subject}
-
-
- [{"date": JSON date
-@todo: ingest dates in string format.
-@todo: ingest doc.id,doc._id,doc.doc_id all as ID
-@todo: 
- "body": The text of the document that is to be indexed by the Ramekin.
- _id": (string) Unique identifier for a document.
- "subject": (optional) (string) Free-text representation of a specific subject.
-
+ *
+ * {
+ *   _id: <Unique ID - can be any format>,
+ *   body: "Text",
+ *   date: <ISO Date format string, or JavaScript date object>,
+ *   subject: <Any object>
+ * }
+ * @todo: ingest doc.id,doc._id,doc.doc_id all as ID
  */
 Ramekin.prototype.ingestAll = function(docs) {
 
-//  console.log("Ingesting",docs);
   for( let i = 0; i < docs.length; i++ ){
     this.ingest(docs[i]);
   }
+
 };
 
 /**
@@ -163,7 +159,6 @@ Ramekin.prototype.trending = function(options) {
   console.log("There are ", usedPhrases.length, " used phrases");
 
   var trendPhrases = [];
-  //var phraseDocs = {}; // duplicated data used later for sorting
   var docPhrases = {}; // duplicated data used later for sorting
 
   var setDocPhrases = function(docPhrases, docs, phrases){
@@ -217,12 +212,6 @@ Ramekin.prototype.trending = function(options) {
       b.score - a.score;
   });
 
-  // trim to just options.trendsTopN
-  /*if( trendPhrases.length > this.options.trendsTopN ){
-    trendPhrases.splice( this.options.trendsTopN, 
-      trendPhrases.length - this.options.trendsTopN );
-  }*/
-
   // run the clustering - find the phrase that is most similar to so many others 
   //  (i.e. i, where sum(i) = max( sum() )
   var trends = cluster(trendPhrases);
@@ -246,6 +235,12 @@ Ramekin.prototype.trending = function(options) {
     // remove unnecessary sort data now it is sorted
     trend.docs = _.map(docs, 'doc');
   }
+
+  // trim to just options.trendsTopN
+  /*if( trendPhrases.length > this.options.trendsTopN ){
+    trendPhrases.splice( this.options.trendsTopN, 
+      trendPhrases.length - this.options.trendsTopN );
+  }*/
 
   // display a nicely formatted summary...
   for( var i = 0; i < trends.length; i++ ){
@@ -329,7 +324,7 @@ Ramekin.prototype.findDocs = function( ngram, options ){
   });
 
   // pull out just the ids
-  return _.map(historyInRange, 'doc_id');
+  return _.map( historyInRange, 'doc_id' );
 
 };
 
