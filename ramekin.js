@@ -1,7 +1,9 @@
 /**
  * Features:
  *
- * Added stop word removal.
+ * * Added stop word removal.
+ * * Cluster related trends.
+ * * Normalise text, so similar words are clustered (i.e. "cycle", "Cycle", "CycLING" etc.)
  */
 var cluster        = require('./cluster');
 var extend         = require('extend');
@@ -27,6 +29,7 @@ var Ramekin = function( options ) {
     // really not sure why I added this...assume it is to handle words that just didn't get mentioned in the history period.
     historyFrequencyTolerance: 1.6,
 
+    // @todo: This is no longer used...
     similarityThreshold: 0.3,
 
     trendsTopN: 8
@@ -45,12 +48,6 @@ var Ramekin = function( options ) {
   natural.PorterStemmer.attach();
 
 };
-
-
-
-
-
-
 
 /**
  * ingestAll() ingests a set of documents into the current Ramekin.
@@ -107,7 +104,6 @@ Ramekin.prototype.ingest = function( doc ) {
   }
 
 };
-
 
 Ramekin.prototype.ingestNGram = function( ngram, doc ) {
 
