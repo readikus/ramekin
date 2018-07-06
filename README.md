@@ -29,13 +29,13 @@ This is the simplest example. A very crude data file has been created with rando
 First, install the NPM package for ramekin:
 
 ```
-   npm i ramekinjs
+   npm i ramekin
 ```
 
 Create a simple script that ingests the data from this file, and detects the trends:
 
 ```
-   const Ramekin = require('ramekinjs');
+   const Ramekin = require('ramekin');
    const ramekin = new Ramekin();
 
    // load all the example stories

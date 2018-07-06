@@ -295,8 +295,13 @@ module.exports = class Ramekin {
     for( let n = 1; n <= this.options.maxN; n++ ){
       // add all the new phrases that are within the date range
       this.ngrams[n].forEach( row => {
+
+        let existingPhrase = phrases.find( element => 
+          Object.keys( row.ngram ).every(key => element[ key ] === row.ngram[ key ] )
+        );
+
         // ensure uniqueness and within the date range 
-        if( ( _.findWhere(phrases, row.ngram) == null ) &&
+        if( ( existingPhrase == null ) &&
           (row.date >= options.start && row.date < options.end) ){
           phrases.push(row.ngram);
         }
