@@ -2,7 +2,7 @@
 
 An open source, real time trend detection library. This project uses machine learning to detect trends in text (i.e. news stories) over time.
 
-Trends are identified by detecting phrases that start occurring much more frequently than those that don't typically occur. Various natural language processing and data science techniques are used to ensure similar words are modelled together (i.e. "cycle", "cycling", "cyclist") and .
+Trends are identified by detecting phrases that start occurring much more frequently than those that don't typically occur. Various natural language processing and data science techniques are used to ensure similar words are modelled together (i.e. "cycle", "cycling" and "cyclist" all reduce down to a common word form, such as "cycle").
 
 Documents can be grouped by a subject, so it is possible to detect "localised" trends - for example, 7 articles talking about a new bike from Santa Cruz might. Similar phrases tend to relate to a particular trend, so hierachical clustering is used to make sure documents related to the same trend are grouped, rather than creating two "trends" about the same thing. For example, "doping scandal" and "Tour de France" are likely to be about the same thing...allegedly.
 
@@ -53,7 +53,7 @@ In a practical example, you will want to look at the last few days. The followin
   get the last 2 days and pass as options...
 ```  
 
-## Configurable:
+# Configurable
 
 History Window - how far back you want to look for your history to determine typical usage of a particular phrase. During the build, we have found 90 days gives a good balance of coverage and computation.
 
@@ -61,26 +61,34 @@ Balance - ability to configure what consitutes a spike for a trend. It's importa
 
 # Roadmap
 
+* Remove lodash dependancy.
+* Implement/reimplment unit tests in Jasmine.
+* Extract clustering algorithm to a separate module/reuse an existing module.
 * Blog article talking about how it works.
-* Improve error handling (i.e. simple stuff, like error if ID already exists!!!)
+* Improve error handling
 * Implement the @todos.
 * Tidy up data when it's loaded (i.e. prune documents that have fallen outside the window.
 * Fix filtering with subject-based trending works.
 * Backgroud recalculate trends when a new document is added (configurable).
-* Persistence.
+* Persistence/redis.
 * Run at scale.
 
 # Automated tests:
 
 Unit tests:
 
-- ensure similar phrases are modelled as one. i.e. "cycle", "cycling", "cyclist".
+* ensure similar phrases are modelled as one. i.e. "cycle", "cycling", "cyclist".
+* provide 100% coverage for each function within the Ramekin class.
 
 # Microservice
 
-IGNORE There is a (currently insecure) API available for creating ramekins, adding news stories and getting the current trends from them.
+There will be an (initially insecure) API available for creating ramekins, adding news stories and getting the current trends from them.
 
 * Able to take a load of docs and give trends (by category).
- * Supply with example data across a range of subjects.
- *
- * DONE Rank documents for each cluster. The more phrases covered, the higher they rank, if these are equal, rank by the length of the sentence.
+* Supply with example data across a range of subjects.
+* DONE Rank documents for each cluster. The more phrases covered, the higher they rank, if these are equal, rank by the length of the sentence.
+
+# Thanks & Credits
+
+Thanks to montemishkin for handing over the ramekin NPM package.
+Thanks to everyone involved with the natural NPM package.
