@@ -1,7 +1,6 @@
 server-client-example.js
 server.config.json
 server.js
-simple-cluster.js
 examples/hello-world-ramekin.js
 examples/simple-trends.json
 examples/tdf-2017-example.js
