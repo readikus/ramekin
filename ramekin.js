@@ -222,6 +222,10 @@ module.exports = class Ramekin {
 
     }
 
+    if( trendPhrases.length == 0 ){
+      return [];
+    }
+
     // remove sub phrases (i.e. "Tour de", compared to "Tour de France")
     trendPhrases = this.removeSubPhrases( trendPhrases );
 
@@ -290,7 +294,7 @@ module.exports = class Ramekin {
    */
   usedPhrases(options) {
 
-    let phrases = [];
+/*    let phrases = [];
     // load all the unique phrases
     for( let n = 1; n <= this.options.maxN; n++ ){
       // add all the new phrases that are within the date range
@@ -308,6 +312,27 @@ module.exports = class Ramekin {
       });
     }
     return phrases;
+*/
+
+//    let phrases = [];
+    let phrases = new Set();
+    // load all the unique phrases
+    for( let n = 1; n <= this.options.maxN; n++ ){
+      // add all the new phrases that are within the date range
+      this.ngrams[n].forEach( row => {
+
+    //    let existingPhrase = phrases.find( element => 
+  //        Object.keys( row.ngram ).every(key => element[ key ] === row.ngram[ key ] )
+//        );
+
+        // ensure uniqueness and within the date range 
+        if( //( existingPhrase == null ) &&
+          (row.date >= options.start && row.date < options.end) ){
+          phrases.add(row.ngram);
+        }
+      });
+    }
+    return [...phrases];
 
   }
 
