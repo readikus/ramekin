@@ -61,6 +61,8 @@ Balance - ability to configure what consitutes a spike for a trend. It's importa
 
 # Roadmap
 
+* Eslint code to an ES8 standard
+* Modularise clustering
 * Remove lodash dependancy.
 * Implement/reimplment unit tests in Jasmine.
 * Extract clustering algorithm to a separate module/reuse an existing module.
