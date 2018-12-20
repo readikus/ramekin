@@ -172,23 +172,22 @@ module.exports = class Ramekin {
     let trendPhrases = []
     let docPhrases = {}
 
-    var setDocPhrases = function (docPhrases, docs, phrases) {
-      for (let i = 0; i < docs.length; i++) {
-        var doc = docs[i]
+    const setDocPhrases = function (docPhrases, docs, phrases) {
+      docs.forEach(doc => {
         if (!docPhrases.hasOwnProperty(doc)) {
-          docPhrases[ doc ] = []
+          docPhrases[doc] = []
         }
-        docPhrases[ doc ] = docPhrases[ doc ].concat(phrases)
-      }
+        docPhrases[doc] = docPhrases[doc].concat(phrases)
+      })
     }
 
     // score each phrase from the trend period compared to it's historic use
     for (let i = 0; i < usedPhrases.length; i++) {
       // score if the phrase has trended in the last 24 hours
-      var trendDocs = this.findDocs(usedPhrases[i], {start: options.start, end: options.end})
-      var trendRangeCount = trendDocs.length
-      var historyRangeCount = this.count(usedPhrases[i], {start: options.historyStart, end: options.historyEnd})
-      var historyDayAverage = historyRangeCount / this.options.historyDays
+      const trendDocs = this.findDocs(usedPhrases[i], {start: options.start, end: options.end})
+      const trendRangeCount = trendDocs.length
+      const historyRangeCount = this.count(usedPhrases[i], {start: options.historyStart, end: options.historyEnd})
+      let historyDayAverage = historyRangeCount / this.options.historyDays
 
       // add in the tolerance
       historyDayAverage *= this.options.historyFrequencyTolerance
@@ -233,7 +232,7 @@ module.exports = class Ramekin {
       let docs = []
 
       // for each document in that trend, count the number of phrases that match
-      for (var j = 0; j < trend.docs.length; j++) {
+      for (let j = 0; j < trend.docs.length; j++) {
         let doc = trend.docs[j]
 
         /*
@@ -310,11 +309,11 @@ module.exports = class Ramekin {
    * @todo: move to trending component.
    */
   removeSubPhrases (trendPhrases) {
-    for (var i = 0; i < trendPhrases.length; i++) {
-      for (var j = i + 1; j < trendPhrases.length; j++) {
+    for (let i = 0; i < trendPhrases.length; i++) {
+      for (let j = i + 1; j < trendPhrases.length; j++) {
         if (TextHelpers.isSubPhrase(trendPhrases[i].phrase, trendPhrases[j].phrase)) {
           // keep the biggest one
-          var spliceI = trendPhrases[i].length > trendPhrases[j].length ? j : i
+          const spliceI = trendPhrases[i].length > trendPhrases[j].length ? j : i
           // remove the element from the array
           trendPhrases.splice(spliceI, 1)
           // start processing again from the element that was cut out
@@ -329,10 +328,10 @@ module.exports = class Ramekin {
    * Find all the doc ids for a given ngram, matching the options.
    */
   findDocs (ngram, options) {
-    let history = this.ngramHistory[ ngram ]
+    const history = this.ngramHistory[ ngram ]
     // I'm sure this can be written in a single line,
     // but it will probably be a proper pain to read/debug
-    var historyInRange = history.occurances.filter(doc => {
+    const historyInRange = history.occurances.filter(doc => {
       return (doc.date >= options.start && doc.date < options.end) && (!options.hasOwnProperty('subject') ||
         options.subject === this.docs[ doc.doc_id ].subject)
     })
