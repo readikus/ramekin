@@ -1,37 +1,22 @@
-g{
-    "parser": "babel-eslint",
-    "env": {
-        "es6": true,
-        "jest": true
-    },
-    "extends": ["standard"],
-    "parserOptions": {
-        "ecmaVersion": 2018,
-        "sourceType": "module"
-    },
-    "plugins": ["jest"],
-    "rules": {
-        "indent": [
-            "error",
-            2
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "single"
-        ],
-        "semi": [
-            "error",
-            "never"
-        ],
-        "jest/no-disabled-tests": "warn",
-        "jest/no-focused-tests": "error",
-        "jest/no-identical-title": "error",
-        "jest/prefer-to-have-length": "warn",
-        "jest/valid-expect": "error"
-    
-    }
+{
+  "env": {
+      "node": true
+  },
+   "extends": ["airbnb-base"],
+   "rules": {
+      "arrow-body-style": 0,
+      "arrow-parens": 0,
+      "comma-dangle": ["error", "never"],
+      "max-len": ["error", 200],
+      "no-multi-str": "off",
+      "no-mixed-operators": 0,
+      "no-use-before-define": ["error", { "functions": false }],
+      "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
+      "padded-blocks": 0,
+      "function-paren-newline": 0,
+      "semi": 0,
+      "space-before-function-paren": ["error", "always"],
+      "strict": 2
+  }
 }
+
