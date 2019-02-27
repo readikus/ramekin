@@ -21,7 +21,7 @@ let _ = require('lodash')
 
 module.exports = class Ramekin {
   constructor (options) {
-    this.options = {...options,
+    this.options = {
       ...{
         // a threshold for the minimum number of times a phrase has to occur
         // in a single day before it can even be considered a trend for a given subject.
@@ -39,7 +39,7 @@ module.exports = class Ramekin {
         similarityThreshold: 0.3,
         // the maximum number of results to return.
         trendsTopN: 8
-      }}
+      }, ...options}}
 
     // initialise the multi-dimensional ngram array storage
     this.ngrams = new Array(this.options.maxN + 1).fill([])
