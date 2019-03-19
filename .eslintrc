@@ -1,27 +1,21 @@
 {
   "env": {
-    "node": true
+      "node": true
   },
-  "extends": ["eslint:recommended", "airbnb"],
-  "parserOptions": {
-    "ecmaVersion": 6,
-    "ecmaFeatures": {
-      "impliedStrict": true
-    }
-  },
-  "rules": {
-    "arrow-body-style": 0,
-    "arrow-parens": 0,
-    "comma-dangle": ["error", "never"],
-    "max-len": ["error", 200],
-    "no-multi-str": "off",
-    "no-mixed-operators": 0,
-    "no-use-before-define": ["error", { "functions": false }],
-    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
-    "padded-blocks": 0,
-    "function-paren-newline": 0,
-    "semi": 0,
-    "space-before-function-paren": ["error", "always"],
-    "strict": 2
+   "extends": ["airbnb-base"],
+   "rules": {
+      "arrow-body-style": 0,
+      "arrow-parens": 0,
+      "comma-dangle": ["error", "never"],
+      "max-len": ["error", 200],
+      "no-multi-str": "off",
+      "no-mixed-operators": 0,
+      "no-use-before-define": ["error", { "functions": false }],
+      "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
+      "padded-blocks": 0,
+      "function-paren-newline": 0,
+      "semi": 0,
+      "space-before-function-paren": ["error", "always"],
+      "strict": 2
   }
 }

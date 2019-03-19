@@ -4,7 +4,7 @@ const moment = require('moment')
 const natural = require('natural')
 const NGrams = natural.NGrams
 // @todo: refactor as much of the _
-let _ = require('lodash');
+let _ = require('lodash')
 
 module.exports = class Ramekin {
   constructor (options) {
