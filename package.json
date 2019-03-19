@@ -1,25 +1,16 @@
 {
   "name": "ramekin",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "An open source, real time trend detection library. This project uses machine learning to detect trends in text (i.e. news stories) over time.",
   "main": "ramekin.js",
   "dependencies": {
-    "babel-eslint": "*",
     "lodash": "*",
     "moment": "^2.22.2",
     "natural": "*"
   },
   "devDependencies": {
-    "eslint": "*",
-    "eslint-config-standard": "*",
-    "eslint-config-standard-react": "*",
-    "eslint-plugin-import": "*",
-    "eslint-plugin-jest": "*",
-    "eslint-plugin-node": "*",
-    "eslint-plugin-prettier": "*",
-    "eslint-plugin-promise": "*",
-    "eslint-plugin-react": "*",
-    "eslint-plugin-standard": "*"
+    "eslint": "^5.15.3",
+    "eslint-config-airbnb": "^17.1.0"
   },
   "homepage": "https://github.com/readikus/ramekin",
   "author": "Ian Read <ianharveyread@gmail.com>",

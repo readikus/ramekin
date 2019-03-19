@@ -1,29 +1,15 @@
-/**
- * Features:
- *
- * * Added stop word removal.
- * * Cluster related trends.
- * * Ingest dates in string format.
- * * Normalise text, so similar words are clustered (i.e. "cycle", "Cycle",
- *     "CycLING" etc.)
- */
-// import * as cluster from './lib/simple-cluster'
 const SimpleCluster = require('./lib/simple-cluster')
-// import * as TextHelpers from './lib/text-helpers'
 const TextHelpers = require('./lib/text-helpers')
-// import * as moment from 'moment'
 const moment = require('moment')
-// import * as natural from 'natural'
 const natural = require('natural')
 const NGrams = natural.NGrams
-// @todo: refactor as much of the _ functions into ES6+ code.
-let _ = require('lodash')
+// @todo: refactor as much of the _
+let _ = require('lodash');
 
 module.exports = class Ramekin {
   constructor (options) {
     this.options = {
-      ...{
-        // a threshold for the minimum number of times a phrase has to occur
+          // a threshold for the minimum number of times a phrase has to occur
         // in a single day before it can even be considered a trend for a given subject.
         // @todo: work out a logical way of calculating this per category.
         minTrendFreq: 3,
@@ -38,8 +24,8 @@ module.exports = class Ramekin {
         // @todo: This is no longer used...(but I really think it should be)
         similarityThreshold: 0.3,
         // the maximum number of results to return.
-        trendsTopN: 8
-      }, ...options}}
+        trendsTopN: 8,
+        ...options}
 
     // initialise the multi-dimensional ngram array storage
     this.ngrams = new Array(this.options.maxN + 1).fill([])
@@ -76,14 +62,9 @@ module.exports = class Ramekin {
    *   }
    */
   ingest (doc) {
-   // console.log('ingesting1', doc.date)
-
     // preprocess the date to check it's in the right format.
-    if (!doc.date) {
-     // console.log(doc)
-      return
-//      throw new Error(`Invalid date format`)
-    }
+    if (!doc.date) return
+
     if (!(doc.date instanceof Date)) {
       doc.date = new Date(doc.date)
     }
