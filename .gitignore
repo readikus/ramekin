@@ -4,3 +4,5 @@ static
 node_modules
 .DS_Store
 config/app-config.json
+.vscode/settings.json
+package-lock.json

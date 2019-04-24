@@ -1,10 +1,10 @@
 const SimpleCluster = require('./lib/simple-cluster')
 const TextHelpers = require('./lib/text-helpers')
+const util = require('./lib/util')
+
 const moment = require('moment')
 const natural = require('natural')
 const NGrams = natural.NGrams
-// @todo: refactor as much of the _
-let _ = require('lodash')
 
 module.exports = class Ramekin {
   constructor (options) {
@@ -68,17 +68,12 @@ module.exports = class Ramekin {
     if (!(doc.date instanceof Date)) {
       doc.date = new Date(doc.date)
     }
-    //console.log('ingesting2', doc.date)
 
     // ensure there is an id set
     if (!doc.hasOwnProperty('_id')) {
       throw new Error('No \'_id\' field set for document')
     }
 
-    // throw error if the document already exists in the ramekin
-    if (this.docs.hasOwnProperty(doc._id)) {
-      throw new Error(`Document ${doc._id} has already been added to the ramekin`)
-    }
     // throw error if the document already exists in the ramekin
     if (this.docs.hasOwnProperty(doc._id)) {
       throw new Error(`Document ${doc._id} has already been added to the ramekin`)
@@ -131,146 +126,80 @@ module.exports = class Ramekin {
     this.ngramHistory[ ngram ].occurances.push({date: doc.date, doc_id: doc._id})
   }
 
+  trendUsedPhrases (usedPhrases, { start, end, historyStart, historyEnd }) {
+    // score each phrase from the trend period compared to it's historic use
+    return usedPhrases.reduce((acc, phrase) => {
+      // score if the phrase has trended in the last 24 hours
+      const trendDocs = this.findDocs(phrase, { start, end })
+      const historyRangeCount = this.count(phrase, { start: historyStart, end: historyEnd })
+      const historyDayAverage = (historyRangeCount / this.options.historyDays) * this.options.historyFrequencyTolerance
+
+      // if it's above the average
+      if ((trendDocs.length > this.options.minTrendFreq) && (trendDocs.length > historyDayAverage)) {
+        acc.push({ phrase,
+          score: trendDocs.length / (historyDayAverage + 1),
+          historyRangeCount,
+          trendRangeCount: trendDocs.length,
+          docs: trendDocs })
+      }
+      return acc
+    }, [])
+  }
+
   /**
    * Validate the trending options, setting defaults where necessary.
    * @todo: this whole block is manky and needs a refactor - setup, search and cluster
    */
-  trending (options = {}) {
-    // This is the really manky bit of code, that needs separating into a helper
-    // class just for the trending, and ES6ing.
+  trending (initialOptions = {}) {
 
-    // setup
-
-    // only set defaults if no start date is set.
-    if (!options.start) {
-      options.start = new Date()
-      options.end = new Date()
-      options.start.setDate(options.end.getDate() - 1)
-    }
-
-    // get the history window dates
-    if (!options.historyStart) {
-      options.historyEnd = new Date(options.start)
-      options.historyStart = moment(options.historyEnd).subtract(
-        this.options.historyDays, 'day').toDate()
-    }
-
-    // end of setup
+    const start = initialOptions.start || moment().subtract(1, 'day').toDate()
+    const end = initialOptions.end || new Date()
+    const historyEnd = initialOptions.historyEnd || initialOptions.start || moment().subtract(1, 'day').toDate()
+    const historyStart = initialOptions.historyStart || moment(historyEnd).subtract(this.options.historyDays, 'day').toDate()
+    console.log('trending on,', { start, end, historyEnd, historyStart })
 
     // start of trending:search
 
     // find all the common phrases used in respective subject, over the past day
-    let usedPhrases = this.usedPhrases(options)
+    const usedPhrases = this.usedPhrases({ start, end, historyEnd, historyStart })
     console.log(`There are ${usedPhrases.length} used phrases and ${Object.keys(this.docs).length} docs`)
     // duplicated data used later for sorting
-    let trendPhrases = []
-    let docPhrases = {}
+    let trendPhrases = this.trendUsedPhrases(usedPhrases, { start, end, historyStart, historyEnd })
 
-    const setDocPhrases = function (docPhrases, docs, phrases) {
+    const docPhrases = trendPhrases.reduce((acc, {docs, phrase}) => {
       docs.forEach(doc => {
-        if (!docPhrases.hasOwnProperty(doc)) {
-          docPhrases[doc] = []
-        }
-        docPhrases[doc] = docPhrases[doc].concat(phrases)
+        acc[doc] = (acc[doc] || []).concat([ phrase ])
       })
-    }
+      return acc
+    }, {})
 
-    // score each phrase from the trend period compared to it's historic use
-    for (let i = 0; i < usedPhrases.length; i++) {
-      // score if the phrase has trended in the last 24 hours
-      const trendDocs = this.findDocs(usedPhrases[i], {start: options.start, end: options.end})
-      const trendRangeCount = trendDocs.length
-      const historyRangeCount = this.count(usedPhrases[i], {start: options.historyStart, end: options.historyEnd})
-      let historyDayAverage = historyRangeCount / this.options.historyDays
-
-      // add in the tolerance
-      historyDayAverage *= this.options.historyFrequencyTolerance
-
-      // if it's above the average
-      if ((trendRangeCount > this.options.minTrendFreq) &&
-          (trendRangeCount > historyDayAverage)) {
-        let score = trendRangeCount / (historyDayAverage + 1)
-        let phrase = {phrase: usedPhrases[i],
-          score: score,
-          historyRangeCount: historyRangeCount,
-          trendRangeCount: trendRangeCount,
-          docs: trendDocs}
-        trendPhrases.push(phrase)
-        setDocPhrases(docPhrases, trendDocs, [phrase.phrase])
-      }
-    }
-
-    if (trendPhrases.length === 0) {
-      return []
-    }
+    if (trendPhrases.length === 0) return []
 
     // remove sub phrases (i.e. "Tour de", compared to "Tour de France")
     trendPhrases = this.removeSubPhrases(trendPhrases)
 
     // rank results - @todo: needs making nicer
     trendPhrases.sort((a, b) =>
-      (b.score === a.score) ? b.phrase.length - a.phrase.length : b.score - a.score
+      b.score === a.score ? b.phrase.length - a.phrase.length : b.score - a.score
     )
 
-    // end of trending:search
-
-    // start of trending:cluster
-
-    // this bit works to here!!!
-
-
-    //console.log('trendPhrases', trendPhrases)
-    // run the clustering - find the phrase that is most similar to so many
+    // cluster similar trends - find the phrase that is most similar to so many
     // others (i.e. i, where sum(i) = max( sum() )
     const sc = new SimpleCluster(trendPhrases)
-    let trends = sc.cluster()
-
-
-    //console.log('trends', trends)
-    //process.exit()
-    //this bit is fucked!
-
+    const trends = sc.cluster()
     // rank the documents in each cluster, based on the docs etc.
-    for (let i = 0; i < trends.length; i++) {
-      let trend = trends[i]
-      let docs = []
-
-
-
-      //console.log('trend', trend)
-      // for each document in that trend, count the number of phrases that match
-      for (let j = 0; j < trend.docs.length; j++) {
-        let doc = trend.docs[j]
-
-        /*
-          let a = new Set([1,2,3]);
-          let b = new Set([4,3,2]);
-
-          let intersection = new Set(
-            [...a].filter(x => b.has(x)));
-
-        */
-        // count the number of phrases from the cluster that are in that doc
-        let matches = _.intersection(docPhrases[ doc ], trend.phrases)
-        docs.push({doc: doc, matches: matches.length})
-      }
-
-      // sort based on the number of matches
+    trends.forEach(trend => {
+      const docs = trend.docs.map(doc => ({
+        doc,
+        matches: util.intersection(docPhrases[doc], trend.phrases).length
+      }))
       docs.sort((a, b) => b.matches - a.matches)
-
       // remove unnecessary sort data now it is sorted
       trend.docs = docs.map(doc => doc.doc)
-    }
-
-    // end of trending:cluster
-
-    // trim to just options.trendsTopN
-    if (trendPhrases.length > this.options.trendsTopN) {
-      trendPhrases.splice(this.options.trendsTopN, trendPhrases.length - this.options.trendsTopN)
-    }
+    })
 
     return trends
-  }
+  }// currently line 280
 
   /**
    * Finds the phrases used in a particular date range.
@@ -280,24 +209,16 @@ module.exports = class Ramekin {
    * returning just the values (or keys) would be quick??
    */
   usedPhrases ({start, end}) {
-  //  console.log('usedPhrases between', start, end)
-
+    const filterRow = row => row.date >= start && row.date < end
     const phrases = new Set()
     // load all the unique phrases
     for (let n = 1; n <= this.options.maxN; n++) {
-      // add all the new phrases that are within the date range
-      // change to a filter...
-      this.ngrams[n].forEach(row => {
-        //console.log('checking ', row.date, 'is between', start, end)
-//        thatwill be the problem 0- do thisas a filter!!!
-        if (row.date >= start && row.date < end) {
-          phrases.add(row.ngram)
-        }
+      this.ngrams[n].filter(filterRow).forEach(row => {
+        phrases.add(row.ngram)
       })
     }
-
     return [...phrases]
-  }
+  }// currently line 307
 
   /**
    * Count the number of times that an ngrams has occurred within the
@@ -341,14 +262,15 @@ module.exports = class Ramekin {
    */
   findDocs (ngram, options) {
     const history = this.ngramHistory[ ngram ]
-    // I'm sure this can be written in a single line,
-    // but it will probably be a proper pain to read/debug
-    const historyInRange = history.occurances.filter(doc => {
-      return (doc.date >= options.start && doc.date < options.end) && (!options.hasOwnProperty('subject') ||
-        options.subject === this.docs[ doc.doc_id ].subject)
-    })
 
-    // pull out just the ids
-    return historyInRange.map(ng => ng.doc_id)
+    if (history === undefined) return []
+
+    return history.occurances.reduce((acc, doc) => {
+      if ((doc.date >= options.start && doc.date < options.end) &&
+        (!options.hasOwnProperty('subject') || options.subject === this.docs[ doc.doc_id ].subject)) {
+          return acc.concat(doc.doc_id)
+      }
+      return acc
+    }, [])
   }
 }
