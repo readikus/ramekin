@@ -1,5 +1,4 @@
 const SimpleCluster = require('./lib/simple-cluster')
-const TextHelpers = require('./lib/text-helpers')
 const util = require('./lib/util')
 
 const moment = require('moment')
@@ -63,7 +62,9 @@ module.exports = class Ramekin {
    */
   ingest (doc) {
     // preprocess the date to check it's in the right format.
-    if (!doc.date) return
+    if (!doc.date) {
+      throw new Error('No \'date\' field set for document - bit hard to do a time/series anaylsis without a date!')
+    }
 
     if (!(doc.date instanceof Date)) {
       doc.date = new Date(doc.date)
@@ -108,22 +109,16 @@ module.exports = class Ramekin {
    */
   ingestNGram (ngram, doc) {
     // construct the storable ngram object
-    let ng = {
+    this.ngrams[ngram.length].push({
       date: doc.date,
-      ngram: ngram,
+      ngram,
       subject: doc.subject
-    }
-    this.ngrams[ ngram.length ].push(ng)
-
-    // handle the ngram history creation
-
-    // initialised hash element
+    })
+    // hash the historical data
     if (!this.ngramHistory.hasOwnProperty(ngram)) {
-      this.ngramHistory[ ngram ] = { occurances: [] }
+      this.ngramHistory[ngram] = { occurances: [] }
     }
-
-    // only setting each word once - something fishy!!!!!
-    this.ngramHistory[ ngram ].occurances.push({date: doc.date, doc_id: doc._id})
+    this.ngramHistory[ngram].occurances.push({date: doc.date, doc_id: doc._id})
   }
 
   trendUsedPhrases (usedPhrases, { start, end, historyStart, historyEnd }) {
@@ -137,7 +132,7 @@ module.exports = class Ramekin {
       // if it's above the average
       if ((trendDocs.length > this.options.minTrendFreq) && (trendDocs.length > historyDayAverage)) {
         acc.push({ phrase,
-          score: trendDocs.length / (historyDayAverage + 1),
+          score: (trendDocs.length / (historyDayAverage + 1)) * phrase.length,
           historyRangeCount,
           trendRangeCount: trendDocs.length,
           docs: trendDocs })
@@ -146,37 +141,44 @@ module.exports = class Ramekin {
     }, [])
   }
 
-  /**
-   * Validate the trending options, setting defaults where necessary.
-   * @todo: this whole block is manky and needs a refactor - setup, search and cluster
-   */
-  trending (initialOptions = {}) {
-
+  buildSearchCriteria(initialOptions = {}) {
     const start = initialOptions.start || moment().subtract(1, 'day').toDate()
     const end = initialOptions.end || new Date()
     const historyEnd = initialOptions.historyEnd || initialOptions.start || moment().subtract(1, 'day').toDate()
     const historyStart = initialOptions.historyStart || moment(historyEnd).subtract(this.options.historyDays, 'day').toDate()
-    console.log('trending on,', { start, end, historyEnd, historyStart })
+    return { start, end, historyEnd, historyStart }
+  }
 
-    // start of trending:search
-
-    // find all the common phrases used in respective subject, over the past day
-    const usedPhrases = this.usedPhrases({ start, end, historyEnd, historyStart })
-    console.log(`There are ${usedPhrases.length} used phrases and ${Object.keys(this.docs).length} docs`)
-    // duplicated data used later for sorting
-    let trendPhrases = this.trendUsedPhrases(usedPhrases, { start, end, historyStart, historyEnd })
-
-    const docPhrases = trendPhrases.reduce((acc, {docs, phrase}) => {
+  static getDocPhrasesFromTrends (trendPhrases) {
+    return trendPhrases.reduce((acc, {docs, phrase}) => {
       docs.forEach(doc => {
         acc[doc] = (acc[doc] || []).concat([ phrase ])
       })
       return acc
     }, {})
+  }
+
+  /**
+   * Validate the trending options, setting defaults where necessary.
+   * @todo: this whole block is manky and needs a refactor - setup, search and cluster
+   */
+  trending (initialOptions = {}) {
+    const searchOptions = this.buildSearchCriteria(initialOptions)
+
+    // start of trending:search
+
+    // find all the common phrases used in respective subject, over the past day
+    const usedPhrases = this.usedPhrases(searchOptions)
+    console.log(`There are ${usedPhrases.length} used phrases and ${Object.keys(this.docs).length} docs`)
+    // duplicated data used later for sorting
+    let trendPhrases = this.trendUsedPhrases(usedPhrases, searchOptions)
 
     if (trendPhrases.length === 0) return []
 
     // remove sub phrases (i.e. "Tour de", compared to "Tour de France")
     trendPhrases = this.removeSubPhrases(trendPhrases)
+
+    const docPhrases = this.constructor.getDocPhrasesFromTrends(trendPhrases)
 
     // rank results - @todo: needs making nicer
     trendPhrases.sort((a, b) =>
@@ -244,7 +246,7 @@ module.exports = class Ramekin {
   removeSubPhrases (trendPhrases) {
     for (let i = 0; i < trendPhrases.length; i++) {
       for (let j = i + 1; j < trendPhrases.length; j++) {
-        if (TextHelpers.isSubPhrase(trendPhrases[i].phrase, trendPhrases[j].phrase)) {
+        if (util.isSubPhrase(trendPhrases[i].phrase, trendPhrases[j].phrase)) {
           // keep the biggest one
           const spliceI = trendPhrases[i].length > trendPhrases[j].length ? j : i
           // remove the element from the array

@@ -94,9 +94,6 @@ test('ingest: no date specified', () => {
   expect(() => r.ingest(noDateTestDoc)).toThrow()
 })
 
-
-
-
 test('ingestAll: test a document gets ingested', () => {
   const r = new Ramekin()
 
@@ -142,9 +139,10 @@ test('trending: returns the correct phrases', () => {
   const trends = r.trending(snapshotTestTimeOptions)
  // console.log('trends', trends)
 
-  expect(trends[0].phrases).toEqual([ [ 'earth', 'dai' ] ])
-  expect(trends[0].score).toEqual([9.782608695652174])
-  expect(trends[2].phrases).toEqual([ [ 'game', 'throne', 'season', 'episod' ] ])
+  expect(trends[0].phrases).toEqual([ [ 'game', 'throne', 'season', 'episod' ] ])
+  expect(trends[0].score).toEqual([32.967032967032964])
+  expect(trends[1].phrases).toEqual([ [ 'earth', 'dai' ] ])
+  expect(trends[1].score).toEqual([19.565217391304348])
 })
 
 test('trending: no data', () => {
