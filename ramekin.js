@@ -86,8 +86,8 @@ module.exports = class Ramekin {
     // generate all the [1...n]-grams for the document
     for (let n = 1; n <= this.options.maxN; n++) {
       // create ngrams from the normalised text
-      let ngrams = NGrams.ngrams(this.normalise(doc.body), n)
-
+      const ngrams = NGrams.ngrams(this.normalise(doc.body), n)
+        .filter(ngram => ngram.length === n);
       // ingest all the ngrams
       ngrams.forEach(ngram => { this.ingestNGram(ngram, doc) })
     }
