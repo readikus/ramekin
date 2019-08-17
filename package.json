@@ -1,6 +1,6 @@
 {
   "name": "ramekin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An open source, real time trend detection library. This project uses machine learning to detect trends in text (i.e. news stories) over time.",
   "main": "ramekin.js",
   "dependencies": {
