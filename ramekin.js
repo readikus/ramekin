@@ -93,6 +93,13 @@ module.exports = class Ramekin {
       throw new Error(`Document ${doc._id} has already been added to the ramekin`)
     }
 
+
+    let log = doc.body.match(/Specialized/i) 
+    if (log) {
+      console.log(doc);
+     // process.exit()
+    }
+
     // we may need to revisit what doc data we store
     this.docs[doc._id] = doc
 
@@ -102,7 +109,11 @@ module.exports = class Ramekin {
       // filter added
       const ngrams = NGrams.ngrams(this.normalise(doc.body), n).filter(ngram => ngram.length === n);
 
-      // ingest all the ngrams
+      if (log) {
+        console.log(ngrams);
+       // process.exit()
+      }
+        // ingest all the ngrams
       ngrams.forEach(ngram => { this.ingestNGram(ngram, doc, n) })
     }
   }
@@ -334,10 +345,10 @@ module.exports = class Ramekin {
     const history = this.ngramHistory[ ngram ]
     // I'm sure this can be written in a single line,
     // but it will probably be a proper pain to read/debug
-    const historyInRange = history.occurances.filter(doc => {
+    const historyInRange = history && history.occurances.filter(doc => {
       return (doc.date >= options.start && doc.date < options.end) && (!options.hasOwnProperty('subject') ||
         options.subject === this.docs[ doc.doc_id ].subject)
-    })
+    }) || []
 
     // pull out just the ids
     return historyInRange.map(ng => ng.doc_id)
