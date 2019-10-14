@@ -1,6 +1,6 @@
 # ramekin
 
-An open source, real time trend detection library. This project uses machine learning to detect trends in text (i.e. news stories) over time.
+An open source, real time trend detection framework. This project uses machine learning to detect trends in text over time.
 
 Trends are identified by detecting phrases that start occurring much more frequently than those that don't typically occur. Various natural language processing and data science techniques are used to ensure similar words are modelled together (i.e. "cycle", "cycling" and "cyclist" all reduce down to a common word form, such as "cycle").
 
@@ -15,7 +15,7 @@ Keywords: trending, trends, news, natural language processing, NLP, machine lear
 Documents need to be ingested into a ramekin using the following format:
 ```
 {
-  _id: <Unique ID - can be any format>,
+  id: <Unique ID - can be any format>,
   body: "Text",
   date: <ISO Date format string, or JavaScript date object>,
   subject: <Any object>
